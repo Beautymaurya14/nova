@@ -1,303 +1,278 @@
 import { useState, useEffect } from 'react';
-import { Folder, Upload, Trash2, ExternalLink, Plus } from 'lucide-react';
+import { Upload, FileText, ExternalLink, Trash2, Plus } from 'lucide-react';
 
 interface Project {
   id: string;
   title: string;
   description: string;
-  technologies: string[];
+  techStack: string;
   liveUrl: string;
   githubUrl: string;
-  dateAdded: string;
+  date: string;
 }
 
-interface ProjectsSectionProps {
-  onClose: () => void;
+interface CV {
+  fileName: string;
+  uploadDate: string;
+  fileUrl: string;
 }
 
-export const ProjectsSection = ({ onClose }: ProjectsSectionProps) => {
+export const ProjectsSection = () => {
   const [projects, setProjects] = useState<Project[]>(() => {
     const saved = localStorage.getItem('projects');
     return saved ? JSON.parse(saved) : [];
   });
 
-  const [isAdding, setIsAdding] = useState(false);
-  const [newProject, setNewProject] = useState<Partial<Project>>({
+  const [cv, setCv] = useState<CV | null>(() => {
+    const saved = localStorage.getItem('cv');
+    return saved ? JSON.parse(saved) : null;
+  });
+
+  const [showAddProject, setShowAddProject] = useState(false);
+  const [newProject, setNewProject] = useState<Omit<Project, 'id' | 'date'>>({
     title: '',
     description: '',
-    technologies: [],
+    techStack: '',
     liveUrl: '',
     githubUrl: ''
   });
-  const [techInput, setTechInput] = useState('');
 
   useEffect(() => {
     localStorage.setItem('projects', JSON.stringify(projects));
   }, [projects]);
 
+  useEffect(() => {
+    if (cv) {
+      localStorage.setItem('cv', JSON.stringify(cv));
+    }
+  }, [cv]);
+
   const handleAddProject = () => {
-    if (!newProject.title || !newProject.description) return;
-
-    const project: Project = {
-      id: Date.now().toString(),
-      title: newProject.title,
-      description: newProject.description,
-      technologies: newProject.technologies || [],
-      liveUrl: newProject.liveUrl || '',
-      githubUrl: newProject.githubUrl || '',
-      dateAdded: new Date().toISOString()
-    };
-
-    setProjects([...projects, project]);
-    setNewProject({
-      title: '',
-      description: '',
-      technologies: [],
-      liveUrl: '',
-      githubUrl: ''
-    });
-    setTechInput('');
-    setIsAdding(false);
+    if (newProject.title && newProject.description) {
+      const project: Project = {
+        ...newProject,
+        id: Date.now().toString(),
+        date: new Date().toISOString()
+      };
+      setProjects([project, ...projects]);
+      setNewProject({
+        title: '',
+        description: '',
+        techStack: '',
+        liveUrl: '',
+        githubUrl: ''
+      });
+      setShowAddProject(false);
+    }
   };
 
   const handleDeleteProject = (id: string) => {
     setProjects(projects.filter(p => p.id !== id));
   };
 
-  const addTechnology = () => {
-    if (techInput.trim()) {
-      setNewProject({
-        ...newProject,
-        technologies: [...(newProject.technologies || []), techInput.trim()]
+  const handleCVUpload = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      const fileUrl = URL.createObjectURL(file);
+      setCv({
+        fileName: file.name,
+        uploadDate: new Date().toISOString(),
+        fileUrl
       });
-      setTechInput('');
     }
   };
 
-  const removeTechnology = (tech: string) => {
-    setNewProject({
-      ...newProject,
-      technologies: (newProject.technologies || []).filter(t => t !== tech)
-    });
-  };
-
   return (
-    <div className="fixed inset-0 bg-black/80 backdrop-blur-sm z-50 overflow-y-auto">
-      <div className="min-h-screen px-4 py-8">
-        <div className="max-w-5xl mx-auto">
-          <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl border-2 border-slate-700 p-8">
-            <div className="flex items-center justify-between mb-8">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-xl">
-                  <Folder className="w-8 h-8 text-white" />
-                </div>
-                <div>
-                  <h2 className="text-3xl font-bold text-white">My Projects & CV</h2>
-                  <p className="text-slate-400">Track your portfolio and achievements</p>
-                </div>
+    <div className="space-y-8">
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 border border-slate-700">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <FileText className="w-8 h-8 text-blue-400" />
+            <h2 className="text-2xl font-bold text-white">CV / Resume</h2>
+          </div>
+        </div>
+
+        {cv ? (
+          <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-white font-semibold mb-1">{cv.fileName}</p>
+                <p className="text-slate-400 text-sm">
+                  Uploaded on {new Date(cv.uploadDate).toLocaleDateString()}
+                </p>
               </div>
-              <button
-                onClick={onClose}
-                className="text-slate-400 hover:text-white text-2xl"
-              >
-                ×
-              </button>
-            </div>
-
-            <div className="mb-6">
-              <button
-                onClick={() => setIsAdding(!isAdding)}
-                className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-blue-500 text-white font-semibold rounded-xl hover:from-emerald-600 hover:to-blue-600 transition-all flex items-center gap-2"
-              >
-                <Plus className="w-5 h-5" />
-                Add New Project
-              </button>
-            </div>
-
-            {isAdding && (
-              <div className="bg-slate-800/50 rounded-xl p-6 mb-6 border border-slate-700">
-                <h3 className="text-xl font-bold text-white mb-4">New Project</h3>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Project Title *
-                    </label>
-                    <input
-                      type="text"
-                      value={newProject.title}
-                      onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
-                      className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                      placeholder="E.g., AI-Powered Document Chat"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Description *
-                    </label>
-                    <textarea
-                      value={newProject.description}
-                      onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
-                      className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                      rows={3}
-                      placeholder="Brief description of your project..."
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-medium text-slate-300 mb-2">
-                      Technologies
-                    </label>
-                    <div className="flex gap-2 mb-2">
-                      <input
-                        type="text"
-                        value={techInput}
-                        onChange={(e) => setTechInput(e.target.value)}
-                        onKeyPress={(e) => e.key === 'Enter' && addTechnology()}
-                        className="flex-1 px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                        placeholder="E.g., React, Python, FastAPI"
-                      />
-                      <button
-                        onClick={addTechnology}
-                        className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600"
-                      >
-                        Add
-                      </button>
-                    </div>
-                    <div className="flex flex-wrap gap-2">
-                      {newProject.technologies?.map((tech, index) => (
-                        <span
-                          key={index}
-                          className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-sm flex items-center gap-2"
-                        >
-                          {tech}
-                          <button
-                            onClick={() => removeTechnology(tech)}
-                            className="hover:text-emerald-300"
-                          >
-                            ×
-                          </button>
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">
-                        Live URL
-                      </label>
-                      <input
-                        type="url"
-                        value={newProject.liveUrl}
-                        onChange={(e) => setNewProject({ ...newProject, liveUrl: e.target.value })}
-                        className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                        placeholder="https://..."
-                      />
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-slate-300 mb-2">
-                        GitHub URL
-                      </label>
-                      <input
-                        type="url"
-                        value={newProject.githubUrl}
-                        onChange={(e) => setNewProject({ ...newProject, githubUrl: e.target.value })}
-                        className="w-full px-4 py-2 bg-slate-900 border border-slate-700 rounded-lg text-white focus:outline-none focus:border-emerald-500"
-                        placeholder="https://github.com/..."
-                      />
-                    </div>
-                  </div>
-
-                  <div className="flex gap-3 pt-4">
-                    <button
-                      onClick={handleAddProject}
-                      className="px-6 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 font-semibold"
-                    >
-                      Save Project
-                    </button>
-                    <button
-                      onClick={() => setIsAdding(false)}
-                      className="px-6 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600"
-                    >
-                      Cancel
-                    </button>
-                  </div>
-                </div>
+              <div className="flex gap-2">
+                <a
+                  href={cv.fileUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-2"
+                >
+                  <ExternalLink className="w-4 h-4" />
+                  View
+                </a>
+                <button
+                  onClick={() => setCv(null)}
+                  className="px-4 py-2 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors flex items-center gap-2"
+                >
+                  <Trash2 className="w-4 h-4" />
+                  Remove
+                </button>
               </div>
-            )}
-
-            <div className="space-y-4">
-              {projects.length === 0 ? (
-                <div className="text-center py-12">
-                  <Upload className="w-16 h-16 text-slate-600 mx-auto mb-4" />
-                  <p className="text-slate-500">No projects added yet. Start building your portfolio!</p>
-                </div>
-              ) : (
-                projects.map((project) => (
-                  <div
-                    key={project.id}
-                    className="bg-slate-800/50 rounded-xl p-6 border border-slate-700 hover:border-slate-600 transition-all"
-                  >
-                    <div className="flex items-start justify-between mb-4">
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold text-white mb-2">{project.title}</h3>
-                        <p className="text-slate-400">{project.description}</p>
-                      </div>
-                      <button
-                        onClick={() => handleDeleteProject(project.id)}
-                        className="text-red-400 hover:text-red-300 p-2"
-                      >
-                        <Trash2 className="w-5 h-5" />
-                      </button>
-                    </div>
-
-                    {project.technologies.length > 0 && (
-                      <div className="flex flex-wrap gap-2 mb-4">
-                        {project.technologies.map((tech, index) => (
-                          <span
-                            key={index}
-                            className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-sm"
-                          >
-                            {tech}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    <div className="flex gap-4">
-                      {project.liveUrl && (
-                        <a
-                          href={project.liveUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-emerald-400 hover:text-emerald-300 text-sm"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          Live Demo
-                        </a>
-                      )}
-                      {project.githubUrl && (
-                        <a
-                          href={project.githubUrl}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="flex items-center gap-2 text-blue-400 hover:text-blue-300 text-sm"
-                        >
-                          <ExternalLink className="w-4 h-4" />
-                          GitHub
-                        </a>
-                      )}
-                    </div>
-                  </div>
-                ))
-              )}
             </div>
           </div>
+        ) : (
+          <div className="border-2 border-dashed border-slate-600 rounded-xl p-8 text-center hover:border-emerald-500 transition-colors">
+            <input
+              type="file"
+              id="cv-upload"
+              accept=".pdf,.doc,.docx"
+              onChange={handleCVUpload}
+              className="hidden"
+            />
+            <label
+              htmlFor="cv-upload"
+              className="cursor-pointer flex flex-col items-center"
+            >
+              <Upload className="w-12 h-12 text-slate-500 mb-3" />
+              <p className="text-white font-semibold mb-1">Upload your CV</p>
+              <p className="text-slate-400 text-sm">PDF, DOC, or DOCX</p>
+            </label>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8 border border-slate-700">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Briefcase className="w-8 h-8 text-emerald-400" />
+            <h2 className="text-2xl font-bold text-white">Projects</h2>
+          </div>
+          <button
+            onClick={() => setShowAddProject(!showAddProject)}
+            className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors flex items-center gap-2"
+          >
+            <Plus className="w-5 h-5" />
+            Add Project
+          </button>
+        </div>
+
+        {showAddProject && (
+          <div className="bg-slate-800/50 rounded-xl p-6 border border-slate-700 mb-6">
+            <h3 className="text-lg font-bold text-white mb-4">Add New Project</h3>
+            <div className="space-y-4">
+              <input
+                type="text"
+                placeholder="Project Title"
+                value={newProject.title}
+                onChange={(e) => setNewProject({ ...newProject, title: e.target.value })}
+                className="w-full px-4 py-2 bg-slate-900 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none"
+              />
+              <textarea
+                placeholder="Project Description"
+                value={newProject.description}
+                onChange={(e) => setNewProject({ ...newProject, description: e.target.value })}
+                rows={3}
+                className="w-full px-4 py-2 bg-slate-900 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none resize-none"
+              />
+              <input
+                type="text"
+                placeholder="Tech Stack (e.g., React, FastAPI, Python)"
+                value={newProject.techStack}
+                onChange={(e) => setNewProject({ ...newProject, techStack: e.target.value })}
+                className="w-full px-4 py-2 bg-slate-900 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none"
+              />
+              <input
+                type="url"
+                placeholder="Live Demo URL (optional)"
+                value={newProject.liveUrl}
+                onChange={(e) => setNewProject({ ...newProject, liveUrl: e.target.value })}
+                className="w-full px-4 py-2 bg-slate-900 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none"
+              />
+              <input
+                type="url"
+                placeholder="GitHub URL (optional)"
+                value={newProject.githubUrl}
+                onChange={(e) => setNewProject({ ...newProject, githubUrl: e.target.value })}
+                className="w-full px-4 py-2 bg-slate-900 text-white rounded-lg border border-slate-600 focus:border-emerald-500 focus:outline-none"
+              />
+              <div className="flex gap-2">
+                <button
+                  onClick={handleAddProject}
+                  className="px-4 py-2 bg-emerald-500 text-white rounded-lg hover:bg-emerald-600 transition-colors"
+                >
+                  Save Project
+                </button>
+                <button
+                  onClick={() => setShowAddProject(false)}
+                  className="px-4 py-2 bg-slate-700 text-white rounded-lg hover:bg-slate-600 transition-colors"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div className="space-y-4">
+          {projects.length === 0 ? (
+            <div className="text-center py-12 text-slate-400">
+              No projects added yet. Click "Add Project" to get started!
+            </div>
+          ) : (
+            projects.map(project => (
+              <div
+                key={project.id}
+                className="bg-slate-800/50 rounded-xl p-6 border border-slate-700 hover:border-emerald-500/50 transition-colors"
+              >
+                <div className="flex items-start justify-between mb-3">
+                  <div>
+                    <h3 className="text-xl font-bold text-white mb-2">{project.title}</h3>
+                    <p className="text-slate-400 text-sm mb-3">{project.description}</p>
+                    {project.techStack && (
+                      <p className="text-emerald-400 text-sm font-semibold">
+                        Tech: {project.techStack}
+                      </p>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => handleDeleteProject(project.id)}
+                    className="p-2 text-red-400 hover:bg-red-500/20 rounded-lg transition-colors"
+                  >
+                    <Trash2 className="w-5 h-5" />
+                  </button>
+                </div>
+                <div className="flex gap-2 flex-wrap">
+                  {project.liveUrl && (
+                    <a
+                      href={project.liveUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1 bg-blue-500 text-white text-sm rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-1"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      Live Demo
+                    </a>
+                  )}
+                  {project.githubUrl && (
+                    <a
+                      href={project.githubUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="px-3 py-1 bg-slate-700 text-white text-sm rounded-lg hover:bg-slate-600 transition-colors flex items-center gap-1"
+                    >
+                      <ExternalLink className="w-3 h-3" />
+                      GitHub
+                    </a>
+                  )}
+                </div>
+              </div>
+            ))
+          )}
         </div>
       </div>
     </div>
   );
 };
+
+import { Briefcase } from 'lucide-react';
