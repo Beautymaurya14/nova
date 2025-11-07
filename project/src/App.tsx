@@ -1,11 +1,22 @@
 import { useState, useEffect } from 'react';
-import { Rocket } from 'lucide-react';
+import { Rocket, Folder, BookOpen } from 'lucide-react';
 import { roadmapData } from './data/roadmapData';
 import { useRoadmapProgress } from './hooks/useRoadmapProgress';
 import { ProgressDashboard } from './components/ProgressDashboard';
 import { TrackSection } from './components/TrackSection';
+import { WelcomePage } from './components/WelcomePage';
+import { ProjectsSection } from './components/ProjectsSection';
+import { JournalSection } from './components/JournalSection';
 
 function App() {
+  const [showWelcome, setShowWelcome] = useState(() => {
+    const visited = localStorage.getItem('hasVisited');
+    return !visited;
+  });
+
+  const [showProjects, setShowProjects] = useState(false);
+  const [showJournal, setShowJournal] = useState(false);
+
   const {
     progress,
     markWeekComplete,
@@ -68,20 +79,50 @@ function App() {
     });
   };
 
+  const handleGetStarted = () => {
+    localStorage.setItem('hasVisited', 'true');
+    setShowWelcome(false);
+  };
+
+  if (showWelcome) {
+    return <WelcomePage onGetStarted={handleGetStarted} />;
+  }
+
   return (
+    <>
+      {showProjects && <ProjectsSection onClose={() => setShowProjects(false)} />}
+      {showJournal && <JournalSection onClose={() => setShowJournal(false)} />}
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950">
       <div className="fixed inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-emerald-900/20 via-transparent to-transparent pointer-events-none" />
 
       <div className="relative">
         <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-xl">
-                <Rocket className="w-8 h-8 text-white" />
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-xl">
+                  <Rocket className="w-8 h-8 text-white" />
+                </div>
+                <div>
+                  <h1 className="text-3xl font-bold text-white">6-Month AI Engineer Roadmap</h1>
+                  <p className="text-slate-400 text-sm">Nov 2025 - Apr 2026 | Get Hired Plan</p>
+                </div>
               </div>
-              <div>
-                <h1 className="text-3xl font-bold text-white">6-Month AI Engineer Roadmap</h1>
-                <p className="text-slate-400 text-sm">Nov 2025 - Apr 2026 | Get Hired Plan</p>
+              <div className="flex gap-3">
+                <button
+                  onClick={() => setShowProjects(true)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg flex items-center gap-2 transition-all border border-slate-700"
+                >
+                  <Folder className="w-5 h-5" />
+                  <span className="hidden sm:inline">Projects</span>
+                </button>
+                <button
+                  onClick={() => setShowJournal(true)}
+                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg flex items-center gap-2 transition-all border border-slate-700"
+                >
+                  <BookOpen className="w-5 h-5" />
+                  <span className="hidden sm:inline">Journal</span>
+                </button>
               </div>
             </div>
           </div>
@@ -126,12 +167,13 @@ function App() {
         <footer className="border-t border-slate-800 mt-20">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
             <p className="text-center text-slate-500 text-sm">
-              Your code and live demos will do the talking. Show, don't tell. 🚀
+              Your code and live demos will do the talking. Show, don't tell.
             </p>
           </div>
         </footer>
       </div>
     </div>
+    </>
   );
 }
 
