@@ -97,31 +97,33 @@ function App() {
 
       <div className="relative">
         <header className="border-b border-slate-800 bg-slate-900/50 backdrop-blur-xl sticky top-0 z-50">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="p-3 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-xl">
-                  <Rocket className="w-8 h-8 text-white" />
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between gap-4">
+              <div className="flex items-center gap-3 min-w-0">
+                <div className="p-2 bg-gradient-to-br from-emerald-500 to-blue-500 rounded-lg flex-shrink-0">
+                  <Rocket className="w-6 h-6 text-white" />
                 </div>
-                <div>
-                  <h1 className="text-3xl font-bold text-white">6-Month AI Engineer Roadmap</h1>
-                  <p className="text-slate-400 text-sm">Nov 2025 - Apr 2026 | Get Hired Plan</p>
+                <div className="min-w-0">
+                  <h1 className="text-lg sm:text-2xl font-bold text-white truncate">AI Engineer Roadmap</h1>
+                  <p className="text-slate-400 text-xs sm:text-sm">Nov 2025 - Apr 2026</p>
                 </div>
               </div>
-              <div className="flex gap-3">
+              <div className="flex gap-2 flex-shrink-0">
                 <button
                   onClick={() => setShowProjects(true)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg flex items-center gap-2 transition-all border border-slate-700"
+                  className="p-2 sm:px-4 sm:py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg flex items-center gap-2 transition-all border border-slate-700"
+                  title="Projects"
                 >
                   <Folder className="w-5 h-5" />
-                  <span className="hidden sm:inline">Projects</span>
+                  <span className="hidden sm:inline text-sm">Projects</span>
                 </button>
                 <button
                   onClick={() => setShowJournal(true)}
-                  className="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg flex items-center gap-2 transition-all border border-slate-700"
+                  className="p-2 sm:px-4 sm:py-2 bg-slate-800 hover:bg-slate-700 text-white rounded-lg flex items-center gap-2 transition-all border border-slate-700"
+                  title="Journal"
                 >
                   <BookOpen className="w-5 h-5" />
-                  <span className="hidden sm:inline">Journal</span>
+                  <span className="hidden sm:inline text-sm">Journal</span>
                 </button>
               </div>
             </div>
